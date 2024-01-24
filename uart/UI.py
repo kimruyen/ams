@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# ui 파일 변환 명령어 : pyuic5 ui파일 -o py파일
 
 from uart import *
 from PyQt5.QtWidgets import *
@@ -20,7 +21,7 @@ class Ui_MainWindow(QMainWindow):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 10, 161, 203))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 10, 172, 203))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
@@ -28,15 +29,15 @@ class Ui_MainWindow(QMainWindow):
         self.verticalLayout.setObjectName("verticalLayout")
         self.textEdit = QtWidgets.QTextEdit(self.verticalLayoutWidget)
         self.textEdit.setEnabled(False)
-        self.textEdit.setMinimumSize(QtCore.QSize(158, 24))
-        self.textEdit.setMaximumSize(QtCore.QSize(158, 24))
+        self.textEdit.setMinimumSize(QtCore.QSize(170, 24))
+        self.textEdit.setMaximumSize(QtCore.QSize(170, 24))
         self.textEdit.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.textEdit.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.textEdit.setAcceptRichText(True)
         self.textEdit.setObjectName("textEdit")
         self.verticalLayout.addWidget(self.textEdit)
         self.baudrateBox = QtWidgets.QComboBox(self.verticalLayoutWidget)
-        self.baudrateBox.setMinimumSize(QtCore.QSize(158, 20))
+        self.baudrateBox.setMinimumSize(QtCore.QSize(170, 20))
         self.baudrateBox.setMaximumSize(QtCore.QSize(158, 20))
         font = QtGui.QFont()
         font.setFamily("Arial")
@@ -54,8 +55,8 @@ class Ui_MainWindow(QMainWindow):
         self.verticalLayout.addWidget(self.baudrateBox)
         self.textEdit_2 = QtWidgets.QTextEdit(self.verticalLayoutWidget)
         self.textEdit_2.setEnabled(False)
-        self.textEdit_2.setMinimumSize(QtCore.QSize(158, 24))
-        self.textEdit_2.setMaximumSize(QtCore.QSize(158, 24))
+        self.textEdit_2.setMinimumSize(QtCore.QSize(170, 24))
+        self.textEdit_2.setMaximumSize(QtCore.QSize(170, 24))
         font = QtGui.QFont()
         font.setFamily("Agency FB")
         font.setBold(True)
@@ -65,7 +66,7 @@ class Ui_MainWindow(QMainWindow):
         self.verticalLayout.addWidget(self.textEdit_2)
         self.stateBox = QtWidgets.QComboBox(self.verticalLayoutWidget)
         self.stateBox.setMinimumSize(QtCore.QSize(158, 25))
-        self.stateBox.setMaximumSize(QtCore.QSize(158, 20))
+        self.stateBox.setMaximumSize(QtCore.QSize(170, 20))
         font = QtGui.QFont()
         font.setFamily("Arial")
         font.setPointSize(11)
@@ -80,8 +81,8 @@ class Ui_MainWindow(QMainWindow):
         self.verticalLayout.addWidget(self.stateBox)
         self.textEdit_3 = QtWidgets.QTextEdit(self.verticalLayoutWidget)
         self.textEdit_3.setEnabled(False)
-        self.textEdit_3.setMinimumSize(QtCore.QSize(158, 24))
-        self.textEdit_3.setMaximumSize(QtCore.QSize(158, 24))
+        self.textEdit_3.setMinimumSize(QtCore.QSize(170, 24))
+        self.textEdit_3.setMaximumSize(QtCore.QSize(170, 24))
         font = QtGui.QFont()
         font.setFamily("Agency FB")
         font.setBold(True)
@@ -134,6 +135,15 @@ class Ui_MainWindow(QMainWindow):
         font.setWeight(75)
         self.filepath.setFont(font)
         self.filepath.setObjectName("filepath")
+        self.clearbtn = QtWidgets.QPushButton(self.centralwidget)
+        self.clearbtn.setGeometry(QtCore.QRect(110, 220, 81, 31))
+        font = QtGui.QFont()
+        font.setFamily("Arial")
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.clearbtn.setFont(font)
+        self.clearbtn.setObjectName("clearbtn")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 610, 21))
@@ -184,9 +194,11 @@ class Ui_MainWindow(QMainWindow):
         self.delBtn.setText(_translate("MainWindow", "삭제"))
         self.startBtn.setText(_translate("MainWindow", "실행"))
         self.filepath.setText(_translate("MainWindow", "파일 선택"))
+        self.clearbtn.setText(_translate("MainWindow", "CLEAR"))
 
         self.startBtn.clicked.connect(self.btnEvent)
         self.filepath.clicked.connect(self.pathEvent)
+        self.clearbtn.clicked.connect(self.clearEvent)
 
         self.addBtn.clicked.connect(self.addEvent)
         self.delBtn.clicked.connect(self.delEvent)
@@ -222,35 +234,40 @@ class Ui_MainWindow(QMainWindow):
 
             if direction == 'CPU->MICOM / SEND':
                 header[1] += state[0]
+
+                length = hex(5 + len(data))
+                header.append(length)
+
+                commandId = self.comboBox.currentText()
+                header.append(str(commandId))
+
+                # send data
+                result = header + data
+
+                # checksum
+                checksum = 0
+                for i in result:
+                    checksum += int(i, 0)
+                checksum = hex(checksum)[:2] + hex(checksum)[-2:]
+
+                result += checksum
+                # send
+                for i in result:
+                    ser.write(bytes.fromhex(i[2:]))
+
             elif direction == 'CPU->MICOM / RESPONSE':
                 header[1] += state[3]
             elif direction == 'MICOM->CPU / SEND':
                 header[1] += state[1]
+            # 'MICOM->CPU / RESPONSE'
             else:
                 header[1] += state[2]
 
-            length = hex(5 + len(data))
-            header.append(length)
-
-            commandId = self.comboBox.currentText()
-            header.append(str(commandId))
-
-            # send data
-            result = header + data
-
-            # checksum
-            checksum = 0
-            for i in result:
-                checksum += int(i, 0)
-            checksum = hex(checksum)[:2]+hex(checksum)[-2:]
-
-            result += checksum
-            # send
-            for i in result:
-                ser.write(bytes.fromhex(i[2:]))
-            ser.reset_output_buffer()
         except Exception as ex:
             print(ex)
+
+    def clearEvent(self):
+        self.mainBox.clear()
 
     def addEvent(self):
         def add_event():
