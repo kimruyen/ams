@@ -2,9 +2,19 @@
 
 import sys
 import binascii
+import threading
 
 from PyQt5 import QtWidgets
 from UI import Ui_MainWindow
+
+
+def main():
+    thread = threading.Thread(target=response, args=())
+    thread.start()
+
+
+def response():
+    print("")
 
 
 if __name__ == "__main__":
