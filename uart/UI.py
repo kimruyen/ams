@@ -280,7 +280,7 @@ class Ui_MainWindow(QMainWindow):
             global data
             path = QFileDialog.getOpenFileName(self, '파일 선택')
             if path[0]:
-                file = open(path[0], 'r', encoding='UTF8')
+                with open(path[0], 'r', encoding='UTF8') as file:
                 data = file.readlines()
             else:
                 def Critical_event():
@@ -324,7 +324,7 @@ class Ui_MainWindow(QMainWindow):
                     result += checksum
                     # send
                     for i in result:
-                        with ser = uart(port, baudRate):
+                        with uart(port, baudRate) as ser:
                             ser.write(bytes.fromhex(i[2:]))
                             self.sendBox.addItem(i[2:])
 
@@ -332,7 +332,8 @@ class Ui_MainWindow(QMainWindow):
                 header[1] += state[3]
             elif direction == 'MICOM->CPU / SEND':
                 header[1] += state[1]
-                ser.readlines()
+                with uart(port, baudRate) as ser:
+                    ser.readlines()
             # 'MICOM->CPU / RESPONSE'
             else:
                 header[1] += state[2]
