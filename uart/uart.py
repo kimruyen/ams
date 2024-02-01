@@ -12,7 +12,6 @@ def uart(port, baudRate):
                         bytesize=serial.EIGHTBITS,
                         timeout=1)
     try:
-        ser.open()
         return ser
     except Exception as ex:
         print(ex)

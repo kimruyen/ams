@@ -159,7 +159,7 @@ class Ui_MainWindow(QMainWindow):
         self.textEdit_4.setObjectName("textEdit_4")
         self.horizontalLayout_3.addWidget(self.textEdit_4)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
-        self.sendBox = QtWidgets.QListView(self.verticalLayoutWidget_2)
+        self.sendBox = QtWidgets.QListWidget(self.verticalLayoutWidget_2)
         self.sendBox.setObjectName("sendBox")
         self.verticalLayout_2.addWidget(self.sendBox)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
@@ -171,7 +171,7 @@ class Ui_MainWindow(QMainWindow):
         self.textEdit_5.setObjectName("textEdit_5")
         self.horizontalLayout_4.addWidget(self.textEdit_5)
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
-        self.responseBox = QtWidgets.QListView(self.verticalLayoutWidget_2)
+        self.responseBox = QtWidgets.QListWidget(self.verticalLayoutWidget_2)
         self.responseBox.setObjectName("responseBox")
         self.verticalLayout_2.addWidget(self.responseBox)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -281,7 +281,7 @@ class Ui_MainWindow(QMainWindow):
             path = QFileDialog.getOpenFileName(self, '파일 선택')
             if path[0]:
                 with open(path[0], 'r', encoding='UTF8') as file:
-                data = file.readlines()
+                    data = file.readlines()
             else:
                 def Critical_event():
                     QMessageBox.critical(self, 'WARN', 'NO FILE WAS SELECTED')
@@ -296,7 +296,7 @@ class Ui_MainWindow(QMainWindow):
             port = getPort()
 
             baudRate = self.baudrateBox.currentText()
-
+            connection = uart(port, baudRate)
             # data => start(1) / state(1) / length(2) / command id(1) / data0 ~ dataN
             header = ['0x02']
 
@@ -324,7 +324,7 @@ class Ui_MainWindow(QMainWindow):
                     result += checksum
                     # send
                     for i in result:
-                        with uart(port, baudRate) as ser:
+                        with connection.open() as ser:
                             ser.write(bytes.fromhex(i[2:]))
                             self.sendBox.addItem(i[2:])
 
@@ -332,7 +332,7 @@ class Ui_MainWindow(QMainWindow):
                 header[1] += state[3]
             elif direction == 'MICOM->CPU / SEND':
                 header[1] += state[1]
-                with uart(port, baudRate) as ser:
+                with connection.open() as ser:
                     ser.readlines()
             # 'MICOM->CPU / RESPONSE'
             else:
