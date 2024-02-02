@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # ui 파일 변환 명령어 : pyuic5 ui파일 -o py파일
 
+import threading
+
 from uart import *
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -186,6 +188,27 @@ class Ui_MainWindow(QMainWindow):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        self.startBtn.clicked.connect(self.btnEvent)
+        self.filepath.clicked.connect(self.pathEvent)
+        self.clearbtn.clicked.connect(self.clearEvent)
+
+        self.addBtn.clicked.connect(self.addEvent)
+        self.delBtn.clicked.connect(self.delEvent)
+
+        def response():
+            port = getport()
+
+            if self.baudrateBox.currentText() is not None:
+                baudRate = self.baudrateBox.currentText()
+                connection = uart(port, baudRate)
+
+                with connection.open() as ser:
+                    readData = ser.readlines()
+                    print(readData)
+
+        thread = threading.Thread(target=response, args=())
+        thread.start()
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "UART"))
@@ -267,13 +290,6 @@ class Ui_MainWindow(QMainWindow):
                                            "margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" "
                                            "font-weight:600;\">RESPONSE</span></p></body></html>"))
 
-        self.startBtn.clicked.connect(self.btnEvent)
-        self.filepath.clicked.connect(self.pathEvent)
-        self.clearbtn.clicked.connect(self.clearEvent)
-
-        self.addBtn.clicked.connect(self.addEvent)
-        self.delBtn.clicked.connect(self.delEvent)
-
     # file open event
     def pathEvent(self):
         try:
@@ -293,7 +309,7 @@ class Ui_MainWindow(QMainWindow):
     # start progress event
     def btnEvent(self):
         try:
-            port = getPort()
+            port = getport()
 
             baudRate = self.baudrateBox.currentText()
             connection = uart(port, baudRate)
@@ -328,15 +344,16 @@ class Ui_MainWindow(QMainWindow):
                             ser.write(bytes.fromhex(i[2:]))
                             self.sendBox.addItem(i[2:])
 
-            elif direction == 'CPU->MICOM / RESPONSE':
-                header[1] += state[3]
-            elif direction == 'MICOM->CPU / SEND':
-                header[1] += state[1]
-                with connection.open() as ser:
-                    ser.readlines()
+            # elif direction == 'CPU->MICOM / RESPONSE':
+            #     header[1] += state[3]
+            # elif direction == 'MICOM->CPU / SEND':
+            #     header[1] += state[1]
+            #     with connection.open() as ser:
+            #         readData = ser.readlines()
+            #         print(readData)
             # 'MICOM->CPU / RESPONSE'
-            else:
-                header[1] += state[2]
+            # else:
+            #     header[1] += state[2]
 
         except Exception as ex:
             print(ex)

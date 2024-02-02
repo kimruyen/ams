@@ -4,9 +4,9 @@ import serial
 import serial.tools.list_ports
 
 
-def uart(port, baudRate):
+def uart(port, baudrate):
     ser = serial.Serial(port=port,
-                        baudrate=baudRate,
+                        baudrate=baudrate,
                         parity=serial.PARITY_NONE,
                         stopbits=serial.STOPBITS_ONE,
                         bytesize=serial.EIGHTBITS,
@@ -17,7 +17,7 @@ def uart(port, baudRate):
         print(ex)
 
 
-def getPort():
+def getport():
     ports = []
     for port in serial.tools.list_ports.comports():
         ports.append(port.name)
