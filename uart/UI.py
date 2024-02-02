@@ -196,15 +196,11 @@ class Ui_MainWindow(QMainWindow):
         self.delBtn.clicked.connect(self.delEvent)
 
         def response():
-            port = getport()
-
-            if self.baudrateBox.currentText() is not None:
-                baudRate = self.baudrateBox.currentText()
-                connection = uart(port, baudRate)
-
-                with connection.open() as ser:
-                    readData = ser.readlines()
-                    print(readData)
+            while 1:
+                if self.baudrateBox.currentText() is not None:
+                    connection = uart(getport(), self.baudrateBox.currentText())
+                    ser = connection.open()
+                    print(ser.readlines())
 
         thread = threading.Thread(target=response, args=())
         thread.start()
@@ -338,7 +334,7 @@ class Ui_MainWindow(QMainWindow):
                     checksum = hex(checksum)[:2] + hex(checksum)[-2:]
 
                     result += checksum
-                    # send
+                    # send data format : ID + length + data + ack + checksum
                     for i in result:
                         with connection.open() as ser:
                             ser.write(bytes.fromhex(i[2:]))
