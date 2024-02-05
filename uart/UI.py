@@ -15,7 +15,6 @@ state = [0x0A, 0x0B, 0x0C, 0x0D]
 
 global data
 
-
 class Ui_MainWindow(QMainWindow):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -293,7 +292,8 @@ class Ui_MainWindow(QMainWindow):
             path = QFileDialog.getOpenFileName(self, '파일 선택')
             if path[0]:
                 with open(path[0], 'r', encoding='UTF8') as file:
-                    data = file.readlines()
+                    readData = file.readlines()
+                data = [hex(ord(text)) for text in readData]
             else:
                 def Critical_event():
                     QMessageBox.critical(self, 'WARN', 'NO FILE WAS SELECTED')
@@ -337,7 +337,7 @@ class Ui_MainWindow(QMainWindow):
                     # send data format : ID + length + data + ack + checksum
                     for i in result:
                         with connection.open() as ser:
-                            ser.write(bytes.fromhex(i[2:]))
+                            ser.write(i[2:])
                             self.sendBox.addItem(i[2:])
 
             # elif direction == 'CPU->MICOM / RESPONSE':
