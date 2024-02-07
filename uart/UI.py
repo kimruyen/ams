@@ -2,6 +2,7 @@
 # ui 파일 변환 명령어 : pyuic5 ui파일 -o py파일
 
 import threading
+import os
 
 from uart import *
 from PyQt5.QtWidgets import *
@@ -14,6 +15,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 state = [0x0A, 0x0B, 0x0C, 0x0D]
 
 global data
+global thread
+mode = False
+
 
 class Ui_MainWindow(QMainWindow):
     def setupUi(self, MainWindow):
@@ -194,15 +198,20 @@ class Ui_MainWindow(QMainWindow):
         self.addBtn.clicked.connect(self.addEvent)
         self.delBtn.clicked.connect(self.delEvent)
 
-        def response():
-            while 1:
-                if self.baudrateBox.currentText() is not None:
-                    connection = uart(getport(), self.baudrateBox.currentText())
-                    ser = connection.open()
-                    print(ser.readlines())
+    def response(self):
+        while 1:
+            if self.baudrateBox.currentText() is not None:
+                ser = uart(getport(), self.baudrateBox.currentText())
+                readData = ser.readline().hex()
+                print(readData)
 
-        thread = threading.Thread(target=response, args=())
-        thread.start()
+                if mode:
+                    ser.close()
+                    pid = os.getpid()
+                    os.kill(pid, 2)
+
+    thread = threading.Thread(target=response, args=())
+    thread.start()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -297,6 +306,7 @@ class Ui_MainWindow(QMainWindow):
             else:
                 def Critical_event():
                     QMessageBox.critical(self, 'WARN', 'NO FILE WAS SELECTED')
+
                 Critical_event()
 
         except Exception as ex:
@@ -305,6 +315,11 @@ class Ui_MainWindow(QMainWindow):
     # start progress event
     def btnEvent(self):
         try:
+            global mode
+
+            if not mode:
+                mode = True
+
             port = getport()
 
             baudRate = self.baudrateBox.currentText()
@@ -312,44 +327,31 @@ class Ui_MainWindow(QMainWindow):
             # data => start(1) / state(1) / length(2) / command id(1) / data0 ~ dataN
             header = ['0x02']
 
-            direction = self.stateBox.currentText()
+            if data is not None:
+                header[1] += state[0]
 
-            if direction == 'CPU->MICOM / SEND':
-                if data is not None:
-                    header[1] += state[0]
+                length = hex(5 + len(data))
+                header.append(length)
 
-                    length = hex(5 + len(data))
-                    header.append(length)
+                commandId = self.comboBox.currentText()
+                header.append(str(commandId))
 
-                    commandId = self.comboBox.currentText()
-                    header.append(str(commandId))
+                # send data
+                result = header + data
 
-                    # send data
-                    result = header + data
+                # checksum
+                checksum = 0
+                for i in result:
+                    checksum += int(i, 0)
+                checksum = hex(checksum)[:2] + hex(checksum)[-2:]
 
-                    # checksum
-                    checksum = 0
-                    for i in result:
-                        checksum += int(i, 0)
-                    checksum = hex(checksum)[:2] + hex(checksum)[-2:]
-
-                    result += checksum
-                    # send data format : ID + length + data + ack + checksum
-                    for i in result:
-                        with connection.open() as ser:
-                            ser.write(i[2:])
-                            self.sendBox.addItem(i[2:])
-
-            # elif direction == 'CPU->MICOM / RESPONSE':
-            #     header[1] += state[3]
-            # elif direction == 'MICOM->CPU / SEND':
-            #     header[1] += state[1]
-            #     with connection.open() as ser:
-            #         readData = ser.readlines()
-            #         print(readData)
-            # 'MICOM->CPU / RESPONSE'
-            # else:
-            #     header[1] += state[2]
+                result += checksum
+                # send data format : ID + length + data + ack + checksum
+                for i in result:
+                    with connection.open() as ser:
+                        ser.write(i)
+                        self.sendBox.addItem(i)
+                thread.start()
 
         except Exception as ex:
             print(ex)
@@ -361,9 +363,11 @@ class Ui_MainWindow(QMainWindow):
     def addEvent(self):
         def add_event():
             QMessageBox.critical(self, 'WARN', 'Not implemented')
+
         add_event()
 
     def delEvent(self):
         def del_event():
             QMessageBox.critical(self, 'WARN', 'Not implemented')
+
         del_event()
