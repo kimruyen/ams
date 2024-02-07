@@ -28,7 +28,7 @@ class Ui_MainWindow(QMainWindow):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 10, 172, 203))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 10, 172, 151))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
@@ -60,32 +60,6 @@ class Ui_MainWindow(QMainWindow):
         self.baudrateBox.addItem("")
         self.baudrateBox.addItem("")
         self.verticalLayout.addWidget(self.baudrateBox)
-        self.textEdit_2 = QtWidgets.QTextEdit(self.verticalLayoutWidget)
-        self.textEdit_2.setEnabled(False)
-        self.textEdit_2.setMinimumSize(QtCore.QSize(170, 24))
-        self.textEdit_2.setMaximumSize(QtCore.QSize(170, 24))
-        font = QtGui.QFont()
-        font.setFamily("Agency FB")
-        font.setBold(True)
-        font.setWeight(75)
-        self.textEdit_2.setFont(font)
-        self.textEdit_2.setObjectName("textEdit_2")
-        self.verticalLayout.addWidget(self.textEdit_2)
-        self.stateBox = QtWidgets.QComboBox(self.verticalLayoutWidget)
-        self.stateBox.setMinimumSize(QtCore.QSize(158, 25))
-        self.stateBox.setMaximumSize(QtCore.QSize(170, 20))
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(11)
-        font.setBold(False)
-        font.setWeight(50)
-        self.stateBox.setFont(font)
-        self.stateBox.setObjectName("stateBox")
-        self.stateBox.addItem("")
-        self.stateBox.addItem("")
-        self.stateBox.addItem("")
-        self.stateBox.addItem("")
-        self.verticalLayout.addWidget(self.stateBox)
         self.textEdit_3 = QtWidgets.QTextEdit(self.verticalLayoutWidget)
         self.textEdit_3.setEnabled(False)
         self.textEdit_3.setMinimumSize(QtCore.QSize(170, 24))
@@ -164,7 +138,7 @@ class Ui_MainWindow(QMainWindow):
         self.textEdit_4.setObjectName("textEdit_4")
         self.horizontalLayout_3.addWidget(self.textEdit_4)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
-        self.sendBox = QtWidgets.QListWidget(self.verticalLayoutWidget_2)
+        self.sendBox = QtWidgets.QListView(self.verticalLayoutWidget_2)
         self.sendBox.setObjectName("sendBox")
         self.verticalLayout_2.addWidget(self.sendBox)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
@@ -176,7 +150,7 @@ class Ui_MainWindow(QMainWindow):
         self.textEdit_5.setObjectName("textEdit_5")
         self.horizontalLayout_4.addWidget(self.textEdit_5)
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
-        self.responseBox = QtWidgets.QListWidget(self.verticalLayoutWidget_2)
+        self.responseBox = QtWidgets.QListView(self.verticalLayoutWidget_2)
         self.responseBox.setObjectName("responseBox")
         self.verticalLayout_2.addWidget(self.responseBox)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -237,55 +211,39 @@ class Ui_MainWindow(QMainWindow):
         self.baudrateBox.setItemText(2, _translate("MainWindow", "38400"))
         self.baudrateBox.setItemText(3, _translate("MainWindow", "57600"))
         self.baudrateBox.setItemText(4, _translate("MainWindow", "115200"))
-        self.textEdit_2.setHtml(_translate("MainWindow",
-                                           "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" "
-                                           "\"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                           "<html><head><meta name=\"qrichtext\" content=\"1\" /><style "
-                                           "type=\"text/css\">\n"
-                                           "p, li { white-space: pre-wrap; }\n"
-                                           "</style></head><body style=\" font-family:\'Agency FB\'; font-size:9pt; "
-                                           "font-weight:600; font-style:normal;\">\n"
-                                           "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; "
-                                           "margin-left:0px; margin-right:0px; -qt-block-indent:0; "
-                                           "text-indent:0px;\"><span style=\" "
-                                           "font-family:\'Gulim\';\">STATE</span></p></body></html>"))
-        self.stateBox.setItemText(0, _translate("MainWindow", "CPU->MICOM / SEND"))
-        self.stateBox.setItemText(1, _translate("MainWindow", "CPU->MICOM / RESPONSE"))
-        self.stateBox.setItemText(2, _translate("MainWindow", "MICOM->CPU / SEND"))
-        self.stateBox.setItemText(3, _translate("MainWindow", "MICOM->CPU / RESPONSE"))
         self.textEdit_3.setHtml(_translate("MainWindow",
-                                           "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" "
-                                           "\"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                           "<html><head><meta name=\"qrichtext\" content=\"1\" /><style "
-                                           "type=\"text/css\">\n"
-                                           "p, li { white-space: pre-wrap; }\n"
-                                           "</style></head><body style=\" font-family:\'Agency FB\'; font-size:9pt; "
-                                           "font-weight:600; font-style:normal;\">\n"
-                                           "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; "
-                                           "margin-left:0px; margin-right:0px; -qt-block-indent:0; "
-                                           "text-indent:0px;\"><span style=\" font-family:\'Gulim\';\">COMMAND "
-                                           "ID</span></p></body></html>"))
+                                           '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" '
+                                           '"http://www.w3.org/TR/REC-html40/strict.dtd">\n'
+                                           '<html><head><meta name="qrichtext" content="1" /><style '
+                                           'type="text/css">\n'
+                                           'p, li { white-space: pre-wrap; }\n'
+                                           '</style></head><body style=" font-family:\'Agency FB\'; font-size:9pt; '
+                                           'font-weight:600; font-style:normal;">\n'
+                                           '<p align="center" style=" margin-top:0px; margin-bottom:0px; '
+                                           'margin-left:0px; margin-right:0px; -qt-block-indent:0; '
+                                           'text-indent:0px;"><span style=" font-family:\'Gulim\';">COMMAND '
+                                           'ID</span></p></body></html>'))
         self.addBtn.setText(_translate("MainWindow", "추가"))
         self.delBtn.setText(_translate("MainWindow", "삭제"))
         self.startBtn.setText(_translate("MainWindow", "실행"))
         self.filepath.setText(_translate("MainWindow", "파일 선택"))
         self.clearbtn.setText(_translate("MainWindow", "CLEAR"))
         self.textEdit_4.setHtml(_translate("MainWindow",
-                                           "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" "
-                                           "\"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                           "<html><head><meta name=\"qrichtext\" content=\"1\" /><style"
-                                           "type=\"text/css\">\n"
-                                           "p, li { white-space: pre-wrap; }\n"
-                                           "</style></head><body style=\" font-family:\'Gulim\'; font-size:9pt; "
-                                           "font-weight:400; font-style:normal;\">\n"
-                                           "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px;"
-                                           "margin-left:0px; margin-right:0px; -qt-block-indent:0; "
-                                           "text-indent:0px;\"><span style=\" "
-                                           "font-weight:600;\">SEND</span></p></body></html>"))
+                                           '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" '
+                                           '"http://www.w3.org/TR/REC-html40/strict.dtd">\n'
+                                           '<html><head><meta name="qrichtext" content="1" /><style '
+                                           'type="text/css">\n'
+                                           'p, li { white-space: pre-wrap; }\n'
+                                           '</style></head><body style=" font-family:\'Gulim\'; font-size:9pt; '
+                                           'font-weight:400; font-style:normal;">\n'
+                                           '<p align="center" style=" margin-top:0px; margin-bottom:0px; '
+                                           'margin-left:0px; margin-right:0px; -qt-block-indent:0; '
+                                           'text-indent:0px;"><span style=" '
+                                           'font-weight:600;">SEND</span></p></body></html>'))
         self.textEdit_5.setHtml(_translate("MainWindow",
                                            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" "
                                            "\"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                           "<html><head><meta name=\"qrichtext\" content=\"1\" /><style"
+                                           "<html><head><meta name=\"qrichtext\" content=\"1\" /><style "
                                            "type=\"text/css\">\n"
                                            "p, li { white-space: pre-wrap; }\n"
                                            "</style></head><body style=\" font-family:\'Gulim\'; font-size:9pt; "
