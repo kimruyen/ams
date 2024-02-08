@@ -317,7 +317,7 @@ p, li { white-space: pre-wrap; }
       </layout>
      </item>
      <item>
-      <widget class="QListView" name="sendBox"/>
+      <widget class="QListWidget" name="sendBox"/>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -350,7 +350,7 @@ p, li { white-space: pre-wrap; }
       </layout>
      </item>
      <item>
-      <widget class="QListView" name="responseBox"/>
+      <widget class="QListWidget" name="responseBox"/>
      </item>
     </layout>
    </widget>

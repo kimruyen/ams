@@ -3,6 +3,7 @@
 
 import threading
 import os
+import time
 
 from uart import *
 from PyQt5.QtWidgets import *
@@ -12,12 +13,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 # MICOM -> CPU response command
 # MICOM -> CPU send command
 # CPU -> MICOM response command
-state = [0x0A, 0x0B, 0x0C, 0x0D]
+state = ['0x0A', '0x0B', '0x0C', '0x0D']
 
-global data
+global sendData
 global thread
-mode = False
-
+global ser
 
 class Ui_MainWindow(QMainWindow):
     def setupUi(self, MainWindow):
@@ -138,7 +138,7 @@ class Ui_MainWindow(QMainWindow):
         self.textEdit_4.setObjectName("textEdit_4")
         self.horizontalLayout_3.addWidget(self.textEdit_4)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
-        self.sendBox = QtWidgets.QListView(self.verticalLayoutWidget_2)
+        self.sendBox = QtWidgets.QListWidget(self.verticalLayoutWidget_2)
         self.sendBox.setObjectName("sendBox")
         self.verticalLayout_2.addWidget(self.sendBox)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
@@ -150,7 +150,7 @@ class Ui_MainWindow(QMainWindow):
         self.textEdit_5.setObjectName("textEdit_5")
         self.horizontalLayout_4.addWidget(self.textEdit_5)
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
-        self.responseBox = QtWidgets.QListView(self.verticalLayoutWidget_2)
+        self.responseBox = QtWidgets.QListWidget(self.verticalLayoutWidget_2)
         self.responseBox.setObjectName("responseBox")
         self.verticalLayout_2.addWidget(self.responseBox)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -172,20 +172,34 @@ class Ui_MainWindow(QMainWindow):
         self.addBtn.clicked.connect(self.addEvent)
         self.delBtn.clicked.connect(self.delEvent)
 
-    def response(self):
-        while 1:
+        def response():
+            global ser
+            try:
+                box = []
+                while 1:
+                    if len(ser.readline()) != 0:
+                        box.append(ser.readline())
+                    elif (ser.readline() is None) and (len(box) != 0):
+                        self.responseBox.addItem(f"{''.join([y.decode() for y in box])}")
+                        box = []
+
+            except Exception as ex:
+                print(ex)
+
+        try:
             if self.baudrateBox.currentText() is not None:
-                ser = uart(getport(), self.baudrateBox.currentText())
-                readData = ser.readline().hex()
-                print(readData)
+                while 1:
+                    if getport() is None:
+                        continue
+                    else:
+                        break
+                ser = uart(getport(), int(self.baudrateBox.currentText()))
 
-                if mode:
-                    ser.close()
-                    pid = os.getpid()
-                    os.kill(pid, 2)
+            thread = threading.Thread(target=response, args=())
+            thread.start()
 
-    thread = threading.Thread(target=response, args=())
-    thread.start()
+        except Exception as ex:
+            print(ex)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -212,17 +226,17 @@ class Ui_MainWindow(QMainWindow):
         self.baudrateBox.setItemText(3, _translate("MainWindow", "57600"))
         self.baudrateBox.setItemText(4, _translate("MainWindow", "115200"))
         self.textEdit_3.setHtml(_translate("MainWindow",
-                                           '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" '
-                                           '"http://www.w3.org/TR/REC-html40/strict.dtd">\n'
-                                           '<html><head><meta name="qrichtext" content="1" /><style '
-                                           'type="text/css">\n'
-                                           'p, li { white-space: pre-wrap; }\n'
-                                           '</style></head><body style=" font-family:\'Agency FB\'; font-size:9pt; '
-                                           'font-weight:600; font-style:normal;">\n'
-                                           '<p align="center" style=" margin-top:0px; margin-bottom:0px; '
-                                           'margin-left:0px; margin-right:0px; -qt-block-indent:0; '
-                                           'text-indent:0px;"><span style=" font-family:\'Gulim\';">COMMAND '
-                                           'ID</span></p></body></html>'))
+                                           "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" "
+                                           "\"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+                                           "<html><head><meta name=\"qrichtext\" content=\"1\" /><style "
+                                           "type=\"text/css\">\n"
+                                           "p, li { white-space: pre-wrap; }\n"
+                                           "</style></head><body style=\" font-family:\'Agency FB\'; font-size:9pt; "
+                                           "font-weight:600; font-style:normal;\">\n"
+                                           "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; "
+                                           "margin-left:0px; margin-right:0px; -qt-block-indent:0; "
+                                           "text-indent:0px;\"><span style=\" font-family:\'Gulim\';\">COMMAND "
+                                           "ID</span></p></body></html>"))
         self.addBtn.setText(_translate("MainWindow", "추가"))
         self.delBtn.setText(_translate("MainWindow", "삭제"))
         self.startBtn.setText(_translate("MainWindow", "실행"))
@@ -255,12 +269,14 @@ class Ui_MainWindow(QMainWindow):
     # file open event
     def pathEvent(self):
         try:
-            global data
+            global sendData
+            sendData = []
             path = QFileDialog.getOpenFileName(self, '파일 선택')
             if path[0]:
                 with open(path[0], 'r', encoding='UTF8') as file:
-                    readData = file.readlines()
-                data = [hex(ord(text)) for text in readData]
+                    fileData = file.readlines()
+                for i in range(len(fileData)):
+                    sendData += [hex(ord(i)) for i in fileData[i]]
             else:
                 def Critical_event():
                     QMessageBox.critical(self, 'WARN', 'NO FILE WAS SELECTED')
@@ -273,29 +289,28 @@ class Ui_MainWindow(QMainWindow):
     # start progress event
     def btnEvent(self):
         try:
-            global mode
-
-            if not mode:
-                mode = True
-
-            port = getport()
-
-            baudRate = self.baudrateBox.currentText()
-            connection = uart(port, baudRate)
+            global sendData
             # data => start(1) / state(1) / length(2) / command id(1) / data0 ~ dataN
             header = ['0x02']
 
-            if data is not None:
-                header[1] += state[0]
+            if sendData is not None:
+                header.append(state[0])
 
-                length = hex(5 + len(data))
-                header.append(length)
+                length = hex(6 + len(sendData))
+                if len(length) == 5:
+                    length = [f'0x0{length[2]}', f'0x{length[3:]}']
+                elif length == 6:
+                    length = [f'0x{length[2:4]}', f'0x{length[3:]}']
+                else:
+                    length = ['0x00', length]
+
+                header += length
 
                 commandId = self.comboBox.currentText()
                 header.append(str(commandId))
 
                 # send data
-                result = header + data
+                result = header + sendData
 
                 # checksum
                 checksum = 0
@@ -303,13 +318,11 @@ class Ui_MainWindow(QMainWindow):
                     checksum += int(i, 0)
                 checksum = hex(checksum)[:2] + hex(checksum)[-2:]
 
-                result += checksum
+                result.append(checksum)
                 # send data format : ID + length + data + ack + checksum
                 for i in result:
-                    with connection.open() as ser:
-                        ser.write(i)
-                        self.sendBox.addItem(i)
-                thread.start()
+                    ser.write(bytes(bytearray([int(x, 16) for x in i])))
+                    # self.sendBox.addItem(i)
 
         except Exception as ex:
             print(ex)
