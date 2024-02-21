@@ -2,10 +2,10 @@
 # ui 파일 변환 명령어 : pyuic5 ui파일 -o py파일
 
 import threading
-import os
 import time
 
 from uart import *
+
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -16,8 +16,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 state = ['0x0A', '0x0B', '0x0C', '0x0D']
 
 global sendData
-global thread
 global ser
+global FLAG
+
 
 class Ui_MainWindow(QMainWindow):
     def setupUi(self, MainWindow):
@@ -172,34 +173,7 @@ class Ui_MainWindow(QMainWindow):
         self.addBtn.clicked.connect(self.addEvent)
         self.delBtn.clicked.connect(self.delEvent)
 
-        def response():
-            global ser
-            try:
-                box = []
-                while 1:
-                    if len(ser.readline()) != 0:
-                        box.append(ser.readline())
-                    elif (ser.readline() is None) and (len(box) != 0):
-                        self.responseBox.addItem(f"{''.join([y.decode() for y in box])}")
-                        box = []
-
-            except Exception as ex:
-                print(ex)
-
-        try:
-            if self.baudrateBox.currentText() is not None:
-                while 1:
-                    if getport() is None:
-                        continue
-                    else:
-                        break
-                ser = uart(getport(), int(self.baudrateBox.currentText()))
-
-            thread = threading.Thread(target=response, args=())
-            thread.start()
-
-        except Exception as ex:
-            print(ex)
+        work(self)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -289,7 +263,11 @@ class Ui_MainWindow(QMainWindow):
     # start progress event
     def btnEvent(self):
         try:
+            global FLAG
+            FLAG = False
+
             global sendData
+
             # data => start(1) / state(1) / length(2) / command id(1) / data0 ~ dataN
             header = ['0x02']
 
@@ -323,7 +301,7 @@ class Ui_MainWindow(QMainWindow):
                 for i in result:
                     ser.write(bytes(bytearray([int(x, 16) for x in i])))
                     # self.sendBox.addItem(i)
-
+                FLAG = True
         except Exception as ex:
             print(ex)
 
@@ -342,3 +320,47 @@ class Ui_MainWindow(QMainWindow):
             QMessageBox.critical(self, 'WARN', 'Not implemented')
 
         del_event()
+
+
+def response(self):
+    try:
+        box = []
+        while FLAG:
+            if len(ser.readline()) != 0:
+                box.append(ser.readline())
+            elif (ser.readline() is None) and (len(box) != 0):
+                payload = 0
+                # start = box[0]
+                # state = box[1]
+                # length = box[2:4]
+                # commandId = box[4]
+
+                for i in box[5:-2]:
+                    payload += int(i.hex())
+
+                checksum = box[-1]
+
+                if bytes.fromhex(str(payload))[-2:] == checksum[-2:]:
+                    self.responseBox.addItem(f"{''.join([y.decode() for y in box])}")
+                box = []
+
+    except Exception as ex:
+        print(ex)
+
+
+def work(self):
+    global ser
+    try:
+        if self.baudrateBox.currentText() is not None:
+            while 1:
+                if getport() is None:
+                    continue
+                else:
+                    break
+        ser = uart(getport(), int(self.baudrateBox.currentText()))
+
+        thread = threading.Thread(target=response, args=(self,))
+        thread.start()
+
+    except Exception as ex:
+        print(ex)

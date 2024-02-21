@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import binascii
-import threading
 
 from PyQt5 import QtWidgets
 from UI import Ui_MainWindow
-
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
