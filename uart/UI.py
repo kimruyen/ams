@@ -15,9 +15,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 # CPU -> MICOM response command
 state = ['0x0A', '0x0B', '0x0C', '0x0D']
 
-global sendData
-global ser
-global FLAG
+sendData = []
+ser = ''
+# FLAG = True
 
 
 class Ui_MainWindow(QMainWindow):
@@ -239,12 +239,10 @@ class Ui_MainWindow(QMainWindow):
                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; "
                                            "margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" "
                                            "font-weight:600;\">RESPONSE</span></p></body></html>"))
-
     # file open event
     def pathEvent(self):
         try:
             global sendData
-            sendData = []
             path = QFileDialog.getOpenFileName(self, '파일 선택')
             if path[0]:
                 with open(path[0], 'r', encoding='UTF8') as file:
@@ -253,7 +251,7 @@ class Ui_MainWindow(QMainWindow):
                     sendData += [hex(ord(i)) for i in fileData[i]]
             else:
                 def Critical_event():
-                    QMessageBox.critical(self, 'WARN', 'NO FILE WAS SELECTED')
+                    QMessageBox.critical(self, 'WARN', 'No file has been selected.')
 
                 Critical_event()
 
@@ -263,15 +261,14 @@ class Ui_MainWindow(QMainWindow):
     # start progress event
     def btnEvent(self):
         try:
-            global FLAG
-            FLAG = False
+            # global FLAG
 
             global sendData
 
             # data => start(1) / state(1) / length(2) / command id(1) / data0 ~ dataN
             header = ['0x02']
 
-            if sendData is not None:
+            if sendData:
                 header.append(state[0])
 
                 length = hex(6 + len(sendData))
@@ -293,15 +290,30 @@ class Ui_MainWindow(QMainWindow):
                 # checksum
                 checksum = 0
                 for i in result:
-                    checksum += int(i, 0)
+                    if i != '':
+                        checksum += int(i, 0)
                 checksum = hex(checksum)[:2] + hex(checksum)[-2:]
 
                 result.append(checksum)
+                print(result)
                 # send data format : ID + length + data + ack + checksum
                 for i in result:
-                    ser.write(bytes(bytearray([int(x, 16) for x in i])))
+                    x = i[2:]
+                    if len(x) == 1:
+                        x = f'0{x}'
+                    # FLAG = False
+                    ser.write(bytes.fromhex(x))
+                    # FLAG = True
+                    # ser.write(bytes(bytearray([int(x, 16) for x in i])))
                     # self.sendBox.addItem(i)
-                FLAG = True
+                sendData = []
+            else:
+                def Critical_event():
+                    QMessageBox.critical(self, 'WARN', 'No file has been selected.')
+
+                Critical_event()
+
+
         except Exception as ex:
             print(ex)
 
@@ -325,24 +337,42 @@ class Ui_MainWindow(QMainWindow):
 def response(self):
     try:
         box = []
-        while FLAG:
-            if len(ser.readline()) != 0:
-                box.append(ser.readline())
-            elif (ser.readline() is None) and (len(box) != 0):
-                payload = 0
-                # start = box[0]
-                # state = box[1]
-                # length = box[2:4]
-                # commandId = box[4]
+        # global FLAG
+        start = ''
+        FLAG = False
+        while True:
+            text = ser.readline()
+            if text != b'\x02':
+                FLAG = True
+            if text != b'' and FLAG == True:
+                try:
+                    start += str(text, 'utf-8')
+                except Exception as ex:
+                    FLAG = False
+                    self.responseBox.clear()
+                    print(start)
+                    self.responseBox.addItem(start[4:])
+                    start = ''
 
-                for i in box[5:-2]:
-                    payload += int(i.hex())
-
-                checksum = box[-1]
-
-                if bytes.fromhex(str(payload))[-2:] == checksum[-2:]:
-                    self.responseBox.addItem(f"{''.join([y.decode() for y in box])}")
-                box = []
+            # self.responseBox.addItem(''.join(box))
+            # box = []
+            # if len(ser.readline()) != 0:
+            #     box.append(ser.readline())
+            # elif (ser.readline() is None) and (len(box) != 0):
+            #     payload = 0
+            #     # start = box[0]
+            #     # state = box[1]
+            #     # length = box[2:4]
+            #     # commandId = box[4]
+            #
+            #     for i in box[5:-2]:
+            #         payload += int(i.hex())
+            #
+            #     checksum = box[-1]
+            #
+            #     if bytes.fromhex(str(payload))[-2:] == checksum[-2:]:
+            #         self.responseBox.addItem(f"{''.join([y.decode() for y in box])}")
+            #     box = []
 
     except Exception as ex:
         print(ex)
@@ -358,7 +388,6 @@ def work(self):
                 else:
                     break
         ser = uart(getport(), int(self.baudrateBox.currentText()))
-
         thread = threading.Thread(target=response, args=(self,))
         thread.start()
 
