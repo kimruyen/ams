@@ -17,6 +17,8 @@ state = ['0x0A', '0x0B', '0x0C', '0x0D']
 
 sendData = []
 ser = ''
+
+
 # FLAG = True
 
 
@@ -239,6 +241,7 @@ class Ui_MainWindow(QMainWindow):
                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; "
                                            "margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" "
                                            "font-weight:600;\">RESPONSE</span></p></body></html>"))
+
     # file open event
     def pathEvent(self):
         try:
@@ -336,43 +339,34 @@ class Ui_MainWindow(QMainWindow):
 
 def response(self):
     try:
-        box = []
-        # global FLAG
-        start = ''
+        receiveData = []
+        dataLen = 4
+        dataSum = 0
         FLAG = False
         while True:
             text = ser.readline()
             if text != b'\x02':
                 FLAG = True
-            if text != b'' and FLAG == True:
-                try:
-                    start += str(text, 'utf-8')
-                except Exception as ex:
-                    FLAG = False
-                    self.responseBox.clear()
-                    print(start)
-                    self.responseBox.addItem(start[4:])
-                    start = ''
+                receiveData.append(str(text, 'utf-8'))
+            if text != b'':
+                if FLAG:
+                    if len(receiveData) <= dataLen:
+                        receiveData.append(str(text, 'utf-8'))
+                    else:
+                        for i in receiveData:
+                            dataSum += int(i, 16)
 
-            # self.responseBox.addItem(''.join(box))
-            # box = []
-            # if len(ser.readline()) != 0:
-            #     box.append(ser.readline())
-            # elif (ser.readline() is None) and (len(box) != 0):
-            #     payload = 0
-            #     # start = box[0]
-            #     # state = box[1]
-            #     # length = box[2:4]
-            #     # commandId = box[4]
-            #
-            #     for i in box[5:-2]:
-            #         payload += int(i.hex())
-            #
-            #     checksum = box[-1]
-            #
-            #     if bytes.fromhex(str(payload))[-2:] == checksum[-2:]:
-            #         self.responseBox.addItem(f"{''.join([y.decode() for y in box])}")
-            #     box = []
+                        if hex(dataSum)[-2:] == str(text, 'utf-8')[-2:]:
+                            self.responseBox.clear()
+                            self.responseBox.addItem(''.join(receiveData[4:]))
+
+                        receiveData = []
+                        dataLen = 4
+                        dataSum = 0
+                        FLAG = False
+
+            if len(receiveData) == 4:
+                dataLen = int(receiveData[2] + receiveData[3], 16)
 
     except Exception as ex:
         print(ex)
