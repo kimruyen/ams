@@ -298,7 +298,9 @@ class Ui_MainWindow(QMainWindow):
                 checksum = hex(checksum)[:2] + hex(checksum)[-2:]
 
                 result.append(checksum)
-                print(result)
+
+                self.sendBox.clear()
+                self.sendBox.addItem(''.join(result[4:-1]))
                 # send data format : ID + length + data + ack + checksum
                 for i in result:
                     x = i[2:]
